@@ -18,7 +18,7 @@ export class NotificationsService {
   private readonly from = 'Property TBILS <verify@tbils.com>';
 
   constructor(private config: ConfigService) {
-    const smtpPort = config.get<number>('SMTP_PORT') || 587;
+    const smtpPort = Number(config.get('SMTP_PORT')) || 587;
     this.transporter = nodemailer.createTransport({
       host: config.get<string>('SMTP_HOST'),
       port: smtpPort,
@@ -27,14 +27,16 @@ export class NotificationsService {
         user: config.get<string>('SMTP_USER'),
         pass: config.get<string>('SMTP_PASS'),
       },
+      tls: { rejectUnauthorized: false },
     });
   }
 
   async sendEmail(to: string, subject: string, html: string) {
     try {
       await this.transporter.sendMail({ from: this.from, to, subject, html });
+      this.logger.log(`Email sent to ${to}: ${subject}`);
     } catch (err) {
-      this.logger.error(`Failed to send email to ${to}: ${err.message}`);
+      this.logger.error(`Failed to send email to ${to}: ${err.message}`, err.stack);
     }
   }
 
