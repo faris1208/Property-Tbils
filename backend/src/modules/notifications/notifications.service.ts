@@ -18,10 +18,11 @@ export class NotificationsService {
   private readonly from = 'Property TBILS <verify@tbils.com>';
 
   constructor(private config: ConfigService) {
+    const smtpPort = config.get<number>('SMTP_PORT') || 587;
     this.transporter = nodemailer.createTransport({
       host: config.get<string>('SMTP_HOST'),
-      port: config.get<number>('SMTP_PORT'),
-      secure: false,
+      port: smtpPort,
+      secure: smtpPort === 465,
       auth: {
         user: config.get<string>('SMTP_USER'),
         pass: config.get<string>('SMTP_PASS'),
