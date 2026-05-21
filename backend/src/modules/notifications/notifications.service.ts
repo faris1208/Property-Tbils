@@ -1,6 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import * as nodemailer from 'nodemailer';
+import { Resend } from 'resend';
 
 function esc(str: string): string {
   return str
@@ -13,27 +13,18 @@ function esc(str: string): string {
 
 @Injectable()
 export class NotificationsService {
-  private transporter: nodemailer.Transporter;
+  private resend: Resend;
   private readonly logger = new Logger(NotificationsService.name);
-  private readonly from = 'Property TBILS <verify@tbils.com>';
+  private readonly from = 'Property TBILS <onboarding@resend.dev>';
 
   constructor(private config: ConfigService) {
-    const smtpPort = Number(config.get('SMTP_PORT')) || 587;
-    this.transporter = nodemailer.createTransport({
-      host: config.get<string>('SMTP_HOST'),
-      port: smtpPort,
-      secure: smtpPort === 465,
-      auth: {
-        user: config.get<string>('SMTP_USER'),
-        pass: config.get<string>('SMTP_PASS'),
-      },
-      tls: { rejectUnauthorized: false },
-    });
+    this.resend = new Resend(config.get<string>('RESEND_API_KEY'));
   }
 
   async sendEmail(to: string, subject: string, html: string) {
     try {
-      await this.transporter.sendMail({ from: this.from, to, subject, html });
+      const { error } = await this.resend.emails.send({ from: this.from, to, subject, html });
+      if (error) throw new Error(error.message);
       this.logger.log(`Email sent to ${to}: ${subject}`);
     } catch (err) {
       this.logger.error(`Failed to send email to ${to}: ${err.message}`, err.stack);

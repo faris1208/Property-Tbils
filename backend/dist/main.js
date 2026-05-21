@@ -16,12 +16,12 @@ async function bootstrap() {
     app.use(compression());
     const allowedOrigins = (process.env.FRONTEND_URL || 'http://localhost:3000')
         .split(',')
-        .map((o) => o.trim());
+        .map((o) => o.trim().replace(/\/$/, ''));
     app.enableCors({
         origin: (origin, cb) => {
             if (!origin || allowedOrigins.includes(origin))
                 return cb(null, true);
-            cb(new Error(`Origin ${origin} not allowed by CORS`));
+            cb(null, false);
         },
         credentials: true,
     });

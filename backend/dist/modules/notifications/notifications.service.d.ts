@@ -1,7 +1,7 @@
 import { ConfigService } from '@nestjs/config';
 export declare class NotificationsService {
     private config;
-    private transporter;
+    private resend;
     private readonly logger;
     private readonly from;
     constructor(config: ConfigService);

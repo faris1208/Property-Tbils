@@ -6,11 +6,12 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { Eye, EyeOff, Home } from 'lucide-react';
+import { Eye, EyeOff } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { toast } from 'sonner';
 import { useAuthStore } from '@/store/authStore';
 import { api, getApiError } from '@/lib/api';
 
@@ -25,7 +26,6 @@ export function LoginForm() {
   const searchParams = useSearchParams();
   const { login, user, token } = useAuthStore();
   const [showPw, setShowPw] = useState(false);
-  const [error, setError] = useState('');
   const verified = searchParams.get('verified') === '1';
   const passwordReset = searchParams.get('reset') === '1';
 
@@ -35,28 +35,28 @@ export function LoginForm() {
     }
   }, [user, token, router]);
 
+  useEffect(() => {
+    if (verified) toast.success('Email verified! You can now sign in.');
+    if (passwordReset) toast.success('Password reset successfully. Sign in with your new password.');
+  }, [verified, passwordReset]);
+
   const form = useForm<FormData>({ resolver: zodResolver(schema), defaultValues: { email: '', password: '' } });
 
   const onSubmit = async (data: FormData) => {
-    setError('');
     try {
       const res = await api.post('/auth/login', data);
       const { accessToken, refreshToken, user } = res.data.data;
       login(user, accessToken, refreshToken);
+      toast.success('Signed in successfully!');
       router.push(user.role === 'admin' ? '/admin' : user.role === 'agent' ? '/agent' : '/');
     } catch (err: unknown) {
-      setError(getApiError(err, 'Login failed. Please try again.'));
+      toast.error(getApiError(err, 'Login failed. Please try again.'));
     }
   };
 
   return (
-    <Card className="w-full max-w-md">
+    <Card className="w-full max-w-lg">
       <CardHeader className="text-center">
-        <div className="flex justify-center mb-2">
-          <div className="p-3 rounded-full bg-primary/10">
-            <Home className="w-6 h-6 text-primary" />
-          </div>
-        </div>
         <CardTitle className="text-2xl">Welcome back</CardTitle>
         <CardDescription>Sign in to your Property TBILS account</CardDescription>
       </CardHeader>
@@ -64,15 +64,6 @@ export function LoginForm() {
         <Form {...form}>
           <fieldset disabled={form.formState.isSubmitting} className="space-y-4">
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-            {verified && (
-              <div className="text-sm text-green-700 bg-green-50 px-3 py-2 rounded-md">Email verified! You can now sign in.</div>
-            )}
-            {passwordReset && (
-              <div className="text-sm text-green-700 bg-green-50 px-3 py-2 rounded-md">Password reset successfully. Sign in with your new password.</div>
-            )}
-            {error && (
-              <div className="text-sm text-destructive bg-destructive/10 px-3 py-2 rounded-md">{error}</div>
-            )}
             <FormField control={form.control} name="email" render={({ field }) => (
               <FormItem>
                 <FormLabel>Email</FormLabel>

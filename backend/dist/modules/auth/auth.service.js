@@ -76,7 +76,7 @@ let AuthService = class AuthService {
         const verificationToken = `${otpHash}:${expiry}`;
         const user = this.usersRepo.create({ ...dto, passwordHash, verificationToken });
         await this.usersRepo.save(user);
-        await this.notifications.sendVerificationEmail(user.email, user.firstName, otp);
+        this.notifications.sendVerificationEmail(user.email, user.firstName, otp).catch(() => { });
         return { message: 'Registration successful. Please check your email for the verification code.' };
     }
     async login(dto) {
@@ -121,7 +121,7 @@ let AuthService = class AuthService {
         const expiry = Date.now() + 10 * 60 * 1000;
         const otpHash = await bcrypt.hash(otp, 10);
         await this.usersRepo.update(user.id, { verificationToken: `${otpHash}:${expiry}` });
-        await this.notifications.sendVerificationEmail(user.email, user.firstName, otp);
+        this.notifications.sendVerificationEmail(user.email, user.firstName, otp).catch(() => { });
         return { message: 'Verification code resent.' };
     }
     async forgotPassword(email) {

@@ -46,9 +46,7 @@ exports.AppModule = AppModule = __decorate([
                     entities: [__dirname + '/**/*.entity{.ts,.js}'],
                     migrations: [__dirname + '/database/migrations/*{.ts,.js}'],
                     synchronize: false,
-                    ssl: config.get('DATABASE_URL')?.includes('aivencloud.com')
-                        ? { rejectUnauthorized: false }
-                        : false,
+                    ssl: config.get('DATABASE_URL')?.includes('aivencloud.com') ? { rejectUnauthorized: false } : false,
                     extra: { max: 10, min: 2, idleTimeoutMillis: 30000 },
                 }),
             }),

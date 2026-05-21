@@ -6,11 +6,12 @@ import { useSearchParams, useRouter } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { Eye, EyeOff, ShieldCheck } from 'lucide-react';
+import { Eye, EyeOff } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { toast } from 'sonner';
 import { api, getApiError } from '@/lib/api';
 
 const schema = z.object({
@@ -28,7 +29,6 @@ export function ResetPasswordForm() {
   const token = searchParams.get('token') || '';
   const email = searchParams.get('email') || '';
   const [showPw, setShowPw] = useState(false);
-  const [error, setError] = useState('');
 
   const form = useForm<FormData>({
     resolver: zodResolver(schema),
@@ -37,7 +37,7 @@ export function ResetPasswordForm() {
 
   if (!token || !email) {
     return (
-      <Card className="w-full max-w-md">
+      <Card className="w-full max-w-lg">
         <CardContent className="pt-6 text-center space-y-3">
           <p className="text-destructive font-medium">Invalid or missing reset link.</p>
           <Link href="/forgot-password" className="text-sm text-primary hover:underline">
@@ -49,23 +49,18 @@ export function ResetPasswordForm() {
   }
 
   const onSubmit = async (data: FormData) => {
-    setError('');
     try {
       await api.post('/auth/reset-password', { email, token, password: data.password });
+      toast.success('Password reset successfully!');
       router.push('/login?reset=1');
     } catch (err: unknown) {
-      setError(getApiError(err, 'Failed to reset password. The link may have expired.'));
+      toast.error(getApiError(err, 'Failed to reset password. The link may have expired.'));
     }
   };
 
   return (
-    <Card className="w-full max-w-md">
+    <Card className="w-full max-w-lg">
       <CardHeader className="text-center">
-        <div className="flex justify-center mb-2">
-          <div className="p-3 rounded-full bg-primary/10">
-            <ShieldCheck className="w-6 h-6 text-primary" />
-          </div>
-        </div>
         <CardTitle className="text-2xl">Set new password</CardTitle>
         <CardDescription>Choose a strong password for your account.</CardDescription>
       </CardHeader>
@@ -73,9 +68,6 @@ export function ResetPasswordForm() {
         <Form {...form}>
           <fieldset disabled={form.formState.isSubmitting} className="space-y-4">
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-              {error && (
-                <div className="text-sm text-destructive bg-destructive/10 px-3 py-2 rounded-md">{error}</div>
-              )}
               <FormField control={form.control} name="password" render={({ field }) => (
                 <FormItem>
                   <FormLabel>New password</FormLabel>

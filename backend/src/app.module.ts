@@ -34,7 +34,7 @@ import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
         entities: [__dirname + '/**/*.entity{.ts,.js}'],
         migrations: [__dirname + '/database/migrations/*{.ts,.js}'],
         synchronize: false,
-        ssl: config.get<string>('NODE_ENV') === 'production' ? { rejectUnauthorized: false } : false,
+        ssl: config.get<string>('DATABASE_URL')?.includes('aivencloud.com') ? { rejectUnauthorized: false } : false,
         extra: { max: 10, min: 2, idleTimeoutMillis: 30000 },
       }),
     }),

@@ -66,7 +66,7 @@ export function VerifyEmailForm() {
   };
 
   return (
-    <Card className="w-full max-w-md">
+    <Card className="w-full max-w-lg">
       <CardHeader className="text-center">
         <CardTitle className="text-2xl">Check your email</CardTitle>
         <CardDescription>

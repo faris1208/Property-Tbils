@@ -1,9 +1,10 @@
 'use client';
 
 import Link from 'next/link';
+import Image from 'next/image';
 import { usePathname, useRouter } from 'next/navigation';
 import {
-  Home, LayoutDashboard, Building2, Plus, LogOut, ChevronRight,
+  LayoutDashboard, Building2, Plus, LogOut, ChevronRight,
   Clock, CheckCircle, XCircle, ShoppingBag, Store, MessageSquare,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -48,10 +49,16 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     <div className="min-h-screen flex bg-muted/30">
       {/* Sidebar */}
       <aside className="w-60 shrink-0 flex flex-col bg-white border-r min-h-screen">
-        <div className="h-16 flex items-center gap-2 px-5 border-b">
-          <Link href="/" className="flex items-center gap-2 font-bold text-base text-primary">
-            <Home className="w-4 h-4 shrink-0" />
-            Property<span className="text-accent">TBILS</span>
+        <div className="h-16 flex items-center px-5 border-b">
+          <Link href="/">
+            <Image
+              src="/assets/Images/homepage/logo.png"
+              alt="Property TBILS"
+              width={120}
+              height={40}
+              className="h-9 w-auto object-contain"
+              priority
+            />
           </Link>
         </div>
 

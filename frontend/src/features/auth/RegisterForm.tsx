@@ -12,6 +12,7 @@ import { Input } from '@/components/ui/input';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { toast } from 'sonner';
 import { api, getApiError } from '@/lib/api';
 
 const schema = z.object({
@@ -26,8 +27,6 @@ type FormData = z.infer<typeof schema>;
 export function RegisterForm() {
   const router = useRouter();
   const [showPw, setShowPw] = useState(false);
-  const [error, setError] = useState('');
-  const [success, setSuccess] = useState('');
 
   const form = useForm<FormData>({
     resolver: zodResolver(schema),
@@ -35,17 +34,17 @@ export function RegisterForm() {
   });
 
   const onSubmit = async (data: FormData) => {
-    setError('');
     try {
       await api.post('/auth/register', data);
+      toast.success('Account created! Check your email to verify.');
       router.push(`/verify-email?email=${encodeURIComponent(data.email)}`);
     } catch (err: unknown) {
-      setError(getApiError(err, 'Registration failed. Please try again.'));
+      toast.error(getApiError(err, 'Registration failed. Please try again.'));
     }
   };
 
   return (
-    <Card className="w-full max-w-md">
+    <Card className="w-full max-w-lg">
       <CardHeader className="text-center">
         <CardTitle className="text-2xl">Create an account</CardTitle>
         <CardDescription>Join Property TBILS to find your dream property</CardDescription>
@@ -54,9 +53,6 @@ export function RegisterForm() {
         <Form {...form}>
           <fieldset disabled={form.formState.isSubmitting} className="space-y-4">
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-            {error && <div className="text-sm text-destructive bg-destructive/10 px-3 py-2 rounded-md">{error}</div>}
-            {success && <div className="text-sm text-green-700 bg-green-50 px-3 py-2 rounded-md">{success}</div>}
-
             <div className="grid grid-cols-2 gap-3">
               <FormField control={form.control} name="firstName" render={({ field }) => (
                 <FormItem>
