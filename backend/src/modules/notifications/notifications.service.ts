@@ -15,7 +15,7 @@ function esc(str: string): string {
 export class NotificationsService {
   private resend: Resend;
   private readonly logger = new Logger(NotificationsService.name);
-  private readonly from = 'Property TBILS <onboarding@resend.dev>';
+  private readonly from = 'Property TBILS <verify@tbils.com>';
 
   constructor(private config: ConfigService) {
     this.resend = new Resend(config.get<string>('RESEND_API_KEY'));
