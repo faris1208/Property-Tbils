@@ -26,7 +26,7 @@ let NotificationsService = NotificationsService_1 = class NotificationsService {
     config;
     resend;
     logger = new common_1.Logger(NotificationsService_1.name);
-    from = 'Property TBILS <onboarding@resend.dev>';
+    from = 'Property TBILS <verify@tbils.com>';
     constructor(config) {
         this.config = config;
         this.resend = new resend_1.Resend(config.get('RESEND_API_KEY'));

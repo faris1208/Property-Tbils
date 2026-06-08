@@ -1,17 +1,18 @@
 'use client';
 
 import Link from 'next/link';
+import Image from 'next/image';
 import { MapPin, ArrowRight } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { AnimateIn, StaggerChildren, staggerItem } from '@/components/ui/AnimateIn';
 
 const cities = [
-  { name: 'Lagos',         count: '3,200+', gradient: 'from-blue-600   to-blue-900',    span: 'md:col-span-2 md:row-span-2' },
-  { name: 'Abuja',         count: '1,800+', gradient: 'from-violet-600 to-violet-900',  span: '' },
-  { name: 'Port Harcourt', count: '900+',   gradient: 'from-emerald-600 to-emerald-900',span: '' },
-  { name: 'Ibadan',        count: '600+',   gradient: 'from-amber-600  to-amber-900',   span: '' },
-  { name: 'Enugu',         count: '400+',   gradient: 'from-rose-600   to-rose-900',    span: '' },
-  { name: 'International', count: '200+',   gradient: 'from-slate-600  to-slate-900',   span: '' },
+  { name: 'Lagos',         count: '3,200+', image: '/assets/Images/homepage/lagos.jpeg',        span: 'md:col-span-2 md:row-span-2' },
+  { name: 'Abuja',         count: '1,800+', image: '/assets/Images/homepage/tb1.jpg',            span: '' },
+  { name: 'Port Harcourt', count: '900+',   image: '/assets/Images/homepage/Portharcourt.jpeg',  span: '' },
+  { name: 'Ibadan',        count: '600+',   image: '/assets/Images/homepage/ibadan.jpeg',         span: '' },
+  { name: 'Enugu',         count: '400+',   image: '/assets/Images/homepage/tb2.jpg',             span: '' },
+  { name: 'International', count: '200+',   image: '/assets/Images/homepage/tey17.jpeg',          span: '' },
 ];
 
 export function ExploreByCity() {
@@ -38,7 +39,7 @@ export function ExploreByCity() {
         </AnimateIn>
 
         <StaggerChildren className="grid grid-cols-2 md:grid-cols-4 gap-4 auto-rows-[140px]">
-          {cities.map(({ name, count, gradient, span }) => (
+          {cities.map(({ name, count, image, span }) => (
             <motion.div
               key={name}
               variants={staggerItem}
@@ -48,19 +49,24 @@ export function ExploreByCity() {
             >
               <Link
                 href={`/properties?city=${encodeURIComponent(name)}`}
-                className={`relative flex flex-col justify-end h-full rounded-2xl overflow-hidden bg-gradient-to-br ${gradient} group block`}
+                className="relative flex flex-col justify-end h-full rounded-2xl overflow-hidden group block"
               >
-                <div className="absolute inset-0 bg-black/20 group-hover:bg-black/10 transition-colors" />
-                <div
-                  className="absolute inset-0 opacity-10"
-                  style={{ backgroundImage: 'radial-gradient(circle, white 1px, transparent 1px)', backgroundSize: '20px 20px' }}
+                <Image
+                  src={image}
+                  alt={name}
+                  fill
+                  className="object-cover group-hover:scale-105 transition-transform duration-500"
+                  sizes="(max-width: 768px) 50vw, 25vw"
                 />
+                {/* dark gradient overlay for readability */}
+                <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent group-hover:from-black/60 transition-all" />
+
                 <div className="relative z-10 p-5">
                   <div className="flex items-center gap-1.5 mb-1">
                     <MapPin className="w-3.5 h-3.5 text-white/70" />
                     <p className="text-white/70 text-xs font-medium">{count} listings</p>
                   </div>
-                  <p className="text-white font-bold text-lg leading-tight">{name}</p>
+                  <p className="text-white font-bold text-lg leading-tight drop-shadow">{name}</p>
                 </div>
                 <div className="absolute top-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity">
                   <div className="w-8 h-8 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center">
