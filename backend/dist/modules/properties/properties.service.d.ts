@@ -36,4 +36,11 @@ export declare class PropertiesService {
         message: string;
     }>;
     findOne(id: string): Promise<Property>;
+    getPublicStats(): Promise<{
+        success: boolean;
+        data: {
+            totalProperties: number;
+            totalCities: number;
+        };
+    }>;
 }

@@ -7,12 +7,12 @@ import { motion } from 'framer-motion';
 import { AnimateIn, StaggerChildren, staggerItem } from '@/components/ui/AnimateIn';
 
 const cities = [
-  { name: 'Lagos',         count: '3,200+', image: '/assets/Images/homepage/lagos.jpeg',        span: 'md:col-span-2 md:row-span-2' },
-  { name: 'Abuja',         count: '1,800+', image: '/assets/Images/homepage/tb1.jpg',            span: '' },
-  { name: 'Port Harcourt', count: '900+',   image: '/assets/Images/homepage/Portharcourt.jpeg',  span: '' },
-  { name: 'Ibadan',        count: '600+',   image: '/assets/Images/homepage/ibadan.jpeg',         span: '' },
-  { name: 'Enugu',         count: '400+',   image: '/assets/Images/homepage/tb2.jpg',             span: '' },
-  { name: 'International', count: '200+',   image: '/assets/Images/homepage/tey17.jpeg',          span: '' },
+  { name: 'Lagos',         slug: 'lagos',          count: '3,200+', image: '/assets/Images/homepage/lagos.jpeg',        span: 'md:col-span-2 md:row-span-2' },
+  { name: 'Abuja',         slug: 'abuja',          count: '1,800+', image: '/assets/Images/homepage/tb1.jpg',            span: '' },
+  { name: 'Port Harcourt', slug: 'port-harcourt',  count: '900+',   image: '/assets/Images/homepage/Portharcourt.jpeg',  span: '' },
+  { name: 'Ibadan',        slug: 'ibadan',         count: '600+',   image: '/assets/Images/homepage/ibadan.jpeg',         span: '' },
+  { name: 'Enugu',         slug: 'enugu',          count: '400+',   image: '/assets/Images/homepage/tb2.jpg',             span: '' },
+  { name: 'International', slug: null,             count: '200+',   image: '/assets/Images/homepage/tey17.jpeg',          span: '' },
 ];
 
 export function ExploreByCity() {
@@ -39,7 +39,7 @@ export function ExploreByCity() {
         </AnimateIn>
 
         <StaggerChildren className="grid grid-cols-2 md:grid-cols-4 gap-4 auto-rows-[140px]">
-          {cities.map(({ name, count, image, span }) => (
+          {cities.map(({ name, slug, count, image, span }) => (
             <motion.div
               key={name}
               variants={staggerItem}
@@ -48,7 +48,7 @@ export function ExploreByCity() {
               className={span}
             >
               <Link
-                href={`/properties?city=${encodeURIComponent(name)}`}
+                href={slug ? `/cities/${slug}` : `/properties?city=${encodeURIComponent(name)}`}
                 className="relative flex flex-col justify-end h-full rounded-2xl overflow-hidden group block"
               >
                 <Image

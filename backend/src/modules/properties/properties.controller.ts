@@ -37,6 +37,12 @@ export class PropertiesController {
     return this.propertiesService.findFeatured();
   }
 
+  @Public()
+  @Get('public-stats')
+  getPublicStats() {
+    return this.propertiesService.getPublicStats();
+  }
+
   @Get('my')
   findMyProperties(@CurrentUser() user: User) {
     return this.propertiesService.findMyProperties(user.id);

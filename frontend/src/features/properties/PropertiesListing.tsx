@@ -13,7 +13,7 @@ import { api } from '@/lib/api';
 import { Property, PaginationMeta } from '@/types';
 import { buildQueryString } from '@/lib/utils';
 
-export function PropertiesListing() {
+export function PropertiesListing({ defaultCity }: { defaultCity?: string } = {}) {
   const searchParams = useSearchParams();
   const router = useRouter();
   const [properties, setProperties] = useState<Property[]>([]);
@@ -22,7 +22,7 @@ export function PropertiesListing() {
   const [fetchError, setFetchError] = useState(false);
   const [showFilters, setShowFilters] = useState(false);
 
-  const city = searchParams.get('city') || '';
+  const city = searchParams.get('city') || defaultCity || '';
   const type = searchParams.get('type') || '';
   const status = searchParams.get('status') || '';
   const sort = searchParams.get('sort') || 'newest';

@@ -17,6 +17,13 @@ export declare class PropertiesController {
         };
     }>;
     findFeatured(): Promise<import("./entities/property.entity").Property[]>;
+    getPublicStats(): Promise<{
+        success: boolean;
+        data: {
+            totalProperties: number;
+            totalCities: number;
+        };
+    }>;
     findMyProperties(user: User): Promise<import("./entities/property.entity").Property[]>;
     findBySlug(slug: string): Promise<import("./entities/property.entity").Property>;
     create(dto: CreatePropertyDto, user: User): Promise<import("./entities/property.entity").Property>;

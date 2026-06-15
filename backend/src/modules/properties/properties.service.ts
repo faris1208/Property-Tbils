@@ -168,4 +168,23 @@ export class PropertiesService {
     if (!property) throw new NotFoundException('Property not found');
     return property;
   }
+
+  async getPublicStats() {
+    const [totalProperties, citiesResult] = await Promise.all([
+      this.propertiesRepo.count({ where: { approvalStatus: ApprovalStatus.APPROVED } }),
+      this.propertiesRepo
+        .createQueryBuilder('p')
+        .select('COUNT(DISTINCT p.city)', 'count')
+        .where('p.approvalStatus = :status', { status: ApprovalStatus.APPROVED })
+        .getRawOne<{ count: string }>(),
+    ]);
+
+    return {
+      success: true,
+      data: {
+        totalProperties,
+        totalCities: parseInt(citiesResult?.count ?? '0', 10),
+      },
+    };
+  }
 }

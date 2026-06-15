@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import Image from 'next/image';
 import { usePathname, useRouter } from 'next/navigation';
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef } from 'react';
 import { Menu, ChevronDown, LogOut, LayoutDashboard, X } from 'lucide-react';
 import { useAuthStore } from '@/store/authStore';
 import { api } from '@/lib/api';
@@ -12,11 +12,32 @@ import { cn } from '@/lib/utils';
 type DropdownItem = { href: string; label: string; external?: boolean };
 type DropdownSection = { heading?: string; items: DropdownItem[] };
 
-const propertyMgmtSections: DropdownSection[] = [
+const cities = ['Lagos', 'Abuja', 'Port Harcourt', 'Ibadan'];
+
+const buySections: DropdownSection[] = [
+  {
+    items: cities.map((city) => ({
+      href: `/properties?status=sale&city=${encodeURIComponent(city)}`,
+      label: city,
+    })),
+  },
+];
+
+const rentSections: DropdownSection[] = [
+  {
+    items: cities.map((city) => ({
+      href: `/properties?status=rent&city=${encodeURIComponent(city)}`,
+      label: city,
+    })),
+  },
+];
+
+const servicesSections: DropdownSection[] = [
   {
     items: [
-      { href: '/contact', label: 'Property Management' },
-      { href: '/contact', label: 'Building Construction' },
+      { href: '/services/property-marketing', label: 'Property Marketing' },
+      { href: '/services/property-management', label: 'Property Management' },
+      { href: '/services/building-construction', label: 'Building Construction' },
     ],
   },
 ];
@@ -45,19 +66,20 @@ const tbilSuitesSections: DropdownSection[] = [
 function Dropdown({ label, sections }: { label: string; sections: DropdownSection[] }) {
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
+  const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  useEffect(() => {
-    const handler = (e: MouseEvent) => {
-      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
-    };
-    document.addEventListener('mousedown', handler);
-    return () => document.removeEventListener('mousedown', handler);
-  }, []);
+  const show = () => {
+    if (timeoutRef.current) clearTimeout(timeoutRef.current);
+    setOpen(true);
+  };
+
+  const hide = () => {
+    timeoutRef.current = setTimeout(() => setOpen(false), 100);
+  };
 
   return (
-    <div ref={ref} className="relative">
+    <div ref={ref} className="relative" onMouseEnter={show} onMouseLeave={hide}>
       <button
-        onClick={() => setOpen((o) => !o)}
         className="flex items-center gap-1 text-sm font-medium text-white/80 hover:text-white transition-colors cursor-pointer"
       >
         {label}
@@ -145,19 +167,15 @@ export function Header() {
             Home
           </Link>
           <Link
-            href="/properties?status=sale"
-            className="text-sm font-medium text-white/70 hover:text-white transition-colors"
+            href="/about"
+            className={cn('text-sm font-medium transition-colors', pathname === '/about' ? 'text-white' : 'text-white/70 hover:text-white')}
           >
-            Buy
+            About Us
           </Link>
-          <Link
-            href="/properties?status=rent"
-            className="text-sm font-medium text-white/70 hover:text-white transition-colors"
-          >
-            Rent
-          </Link>
-          <Dropdown label="Property Management" sections={propertyMgmtSections} />
-          <Dropdown label="Tbil Suites" sections={tbilSuitesSections} />
+          <Dropdown label="Buy" sections={buySections} />
+          <Dropdown label="Rent" sections={rentSections} />
+          <Dropdown label="Our Services" sections={servicesSections} />
+          <Dropdown label="TBIL Suites" sections={tbilSuitesSections} />
         </nav>
 
         {/* Desktop auth */}
@@ -211,11 +229,12 @@ export function Header() {
         <div className="md:hidden bg-black/95 border-t border-white/10 px-4 py-5 space-y-4">
           {[
             { href: '/', label: 'Home' },
+            { href: '/about', label: 'About Us' },
             { href: '/properties?status=sale', label: 'Buy' },
             { href: '/properties?status=rent', label: 'Rent' },
-            { href: '/properties', label: 'All Properties' },
-            { href: '/agents', label: 'Find an Agent' },
-            { href: '/blog', label: 'Blog' },
+            { href: '/services/property-marketing', label: 'Property Marketing' },
+            { href: '/services/property-management', label: 'Property Management' },
+            { href: '/services/building-construction', label: 'Building Construction' },
             { href: '/contact', label: 'Contact' },
           ].map((link) => (
             <Link

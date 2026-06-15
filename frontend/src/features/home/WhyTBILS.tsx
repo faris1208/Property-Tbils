@@ -1,16 +1,11 @@
 'use client';
 
 import Link from 'next/link';
+import { useEffect, useState } from 'react';
 import { ShieldCheck, Users, HeadphonesIcon, TrendingUp, ArrowRight } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { AnimateIn, StaggerChildren, staggerItem } from '@/components/ui/AnimateIn';
-
-const stats = [
-  { value: '10,000+', label: 'Properties Listed' },
-  { value: '500+',    label: 'Verified Agents' },
-  { value: '20+',     label: 'Cities Covered' },
-  { value: '98%',     label: 'Client Satisfaction' },
-];
+import { api } from '@/lib/api';
 
 const features = [
   {
@@ -40,6 +35,25 @@ const features = [
 ];
 
 export function WhyTBILS() {
+  const [stats, setStats] = useState([
+    { value: '0+', label: 'Properties Listed' },
+    { value: '500+', label: 'Verified Agents' },
+    { value: '0+', label: 'Cities Covered' },
+    { value: '98%', label: 'Client Satisfaction' },
+  ]);
+
+  useEffect(() => {
+    api.get('/properties/public-stats').then((r) => {
+      const { totalProperties, totalCities } = r.data.data;
+      setStats([
+        { value: `${totalProperties.toLocaleString()}+`, label: 'Properties Listed' },
+        { value: '500+', label: 'Verified Agents' },
+        { value: `${totalCities}+`, label: 'Cities Covered' },
+        { value: '98%', label: 'Client Satisfaction' },
+      ]);
+    }).catch(() => {});
+  }, []);
+
   return (
     <section className="py-20 bg-white">
       <div className="container mx-auto px-4">

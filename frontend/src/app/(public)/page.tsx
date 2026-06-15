@@ -6,10 +6,37 @@ import { ExploreByCity } from '@/features/home/ExploreByCity';
 import { WhyTBILS } from '@/features/home/WhyTBILS';
 import { Testimonials } from '@/features/home/Testimonials';
 import { BlogPreview } from '@/features/home/BlogPreview';
+import { JsonLd } from '@/components/seo/JsonLd';
+
+const localBusinessSchema = {
+  '@context': 'https://schema.org',
+  '@type': 'RealEstateAgent',
+  name: 'Property TBILS',
+  url: 'https://property.tbils.com',
+  logo: 'https://property.tbils.com/favicon.png',
+  description: 'Nigeria\'s trusted property marketplace for buying, renting, and selling verified real estate.',
+  areaServed: { '@type': 'Country', name: 'Nigeria' },
+  address: { '@type': 'PostalAddress', addressCountry: 'NG' },
+  sameAs: ['https://tbils.com'],
+};
+
+const websiteSchema = {
+  '@context': 'https://schema.org',
+  '@type': 'WebSite',
+  name: 'Property TBILS',
+  url: 'https://property.tbils.com',
+  potentialAction: {
+    '@type': 'SearchAction',
+    target: { '@type': 'EntryPoint', urlTemplate: 'https://property.tbils.com/properties?keyword={search_term_string}' },
+    'query-input': 'required name=search_term_string',
+  },
+};
 
 export default function HomePage() {
   return (
     <>
+      <JsonLd data={localBusinessSchema} />
+      <JsonLd data={websiteSchema} />
       <HeroSection />
       <FeaturedListings />
       <ExploreByCity />

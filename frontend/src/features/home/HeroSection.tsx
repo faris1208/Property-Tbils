@@ -4,16 +4,11 @@ import { useEffect, useRef, useState } from 'react';
 import { motion } from 'framer-motion';
 import { SearchBar } from '@/components/search/SearchBar';
 import { Badge } from '@/components/ui/badge';
+import { api } from '@/lib/api';
 
 const videos = [
   '/assets/Images/homepage/banner.mp4',
   '/assets/Images/homepage/banner2.mp4',
-];
-
-const stats = [
-  { value: 10000, suffix: '+', label: 'Properties' },
-  { value: 500, suffix: '+', label: 'Verified Agents' },
-  { value: 20, suffix: '+', label: 'Cities' },
 ];
 
 function CountUp({ target, suffix }: { target: number; suffix: string }) {
@@ -51,6 +46,22 @@ function CountUp({ target, suffix }: { target: number; suffix: string }) {
 export function HeroSection() {
   const [current, setCurrent] = useState(0);
   const videoRef = useRef<HTMLVideoElement>(null);
+  const [stats, setStats] = useState([
+    { value: 0, suffix: '+', label: 'Properties' },
+    { value: 0, suffix: '+', label: 'Verified Agents' },
+    { value: 0, suffix: '+', label: 'Cities' },
+  ]);
+
+  useEffect(() => {
+    api.get('/properties/public-stats').then((r) => {
+      const { totalProperties, totalCities } = r.data.data;
+      setStats([
+        { value: totalProperties, suffix: '+', label: 'Properties' },
+        { value: 500, suffix: '+', label: 'Verified Agents' },
+        { value: totalCities, suffix: '+', label: 'Cities' },
+      ]);
+    }).catch(() => {});
+  }, []);
 
   useEffect(() => {
     const video = videoRef.current;
