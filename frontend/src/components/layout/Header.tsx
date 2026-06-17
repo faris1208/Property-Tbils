@@ -46,10 +46,10 @@ const tbilSuitesSections: DropdownSection[] = [
   {
     heading: 'Digital Marketing Services',
     items: [
-      { href: '/contact', label: 'Website Design' },
-      { href: '/contact', label: 'PPC Services' },
-      { href: '/contact', label: 'SEO Services' },
-      { href: '/contact', label: 'SMM Services' },
+      { href: 'https://tbildigital.com/', label: 'Website Design', external: true },
+      { href: 'https://tbildigital.com/', label: 'PPC Services', external: true },
+      { href: 'https://tbildigital.com/', label: 'SEO Services', external: true },
+      { href: 'https://tbildigital.com/', label: 'SMM Services', external: true },
     ],
   },
   {

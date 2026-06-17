@@ -1,17 +1,16 @@
 import Link from 'next/link';
 
 const quickLinks = [
-  { href: '/', label: 'Home' },
-  { href: '/properties', label: 'Buy / Rent' },
-  { href: '/properties?type=shortlet', label: 'Shortlets' },
-  { href: '/contact', label: 'Digital Marketing' },
+  { href: '/', label: 'Home', external: false },
+  { href: '/properties', label: 'Buy / Rent', external: false },
+  { href: '/properties?type=shortlet', label: 'Shortlets', external: false },
+  { href: 'https://tbildigital.com/', label: 'Digital Marketing', external: true },
 ];
 
 const services = [
-  { href: '/contact', label: 'Real Estate Consultation', external: false },
-  { href: '/contact', label: 'Property Management', external: false },
-  { href: 'https://tbils.com', label: 'Book Flight Tickets', external: true },
-  { href: '/contact', label: 'Marketing & Branding', external: false },
+  { href: '/services/property-marketing', label: 'Property Marketing', external: false },
+  { href: '/services/property-management', label: 'Property Management', external: false },
+  { href: '/services/building-construction', label: 'Building Construction', external: false },
 ];
 
 export function Footer() {
@@ -36,8 +35,12 @@ export function Footer() {
           <div>
             <h3 className="font-bold text-white mb-5">Quick Links</h3>
             <ul className="space-y-3">
-              {quickLinks.map(({ href, label }) => (
-                <li key={label}><Link href={href} className="text-sm text-slate-400 hover:text-white transition-colors">{label}</Link></li>
+              {quickLinks.map(({ href, label, external }) => (
+                <li key={label}>
+                  {external
+                    ? <a href={href} target="_blank" rel="noopener noreferrer" className="text-sm text-slate-400 hover:text-white transition-colors">{label}</a>
+                    : <Link href={href} className="text-sm text-slate-400 hover:text-white transition-colors">{label}</Link>}
+                </li>
               ))}
             </ul>
           </div>
