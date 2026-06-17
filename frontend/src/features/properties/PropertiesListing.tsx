@@ -1,13 +1,13 @@
 'use client';
 
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useRef } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
-import { SlidersHorizontal } from 'lucide-react';
+import { SlidersHorizontal, Search } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { PropertyCard } from '@/components/property/PropertyCard';
 import { PropertyCardSkeleton } from '@/components/property/PropertyCardSkeleton';
-import { SearchBar } from '@/components/search/SearchBar';
 import { FilterPanel } from './FilterPanel';
 import { api } from '@/lib/api';
 import { Property, PaginationMeta } from '@/types';
@@ -21,6 +21,9 @@ export function PropertiesListing({ defaultCity }: { defaultCity?: string } = {}
   const [loading, setLoading] = useState(true);
   const [fetchError, setFetchError] = useState(false);
   const [showFilters, setShowFilters] = useState(false);
+  const [keyword, setKeyword] = useState('');
+  const [debouncedKeyword, setDebouncedKeyword] = useState('');
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const city = searchParams.get('city') || defaultCity || '';
   const type = searchParams.get('type') || '';
@@ -28,11 +31,17 @@ export function PropertiesListing({ defaultCity }: { defaultCity?: string } = {}
   const sort = searchParams.get('sort') || 'newest';
   const page = Number(searchParams.get('page') || 1);
 
+  const handleKeywordChange = (val: string) => {
+    setKeyword(val);
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    debounceRef.current = setTimeout(() => setDebouncedKeyword(val), 400);
+  };
+
   const fetchProperties = useCallback(async () => {
     setLoading(true);
     setFetchError(false);
     try {
-      const params: Record<string, unknown> = { city, type, status, sort, page, limit: 12 };
+      const params: Record<string, unknown> = { city, type, status, sort, page, limit: 12, keyword: debouncedKeyword };
       const qs = buildQueryString(params);
       const res = await api.get(`/properties?${qs}`);
       setProperties(res.data.data);
@@ -41,7 +50,7 @@ export function PropertiesListing({ defaultCity }: { defaultCity?: string } = {}
       setFetchError(true);
       setProperties([]);
     } finally { setLoading(false); }
-  }, [city, type, status, sort, page]);
+  }, [city, type, status, sort, page, debouncedKeyword]);
 
   useEffect(() => { fetchProperties(); }, [fetchProperties]);
 
@@ -59,8 +68,16 @@ export function PropertiesListing({ defaultCity }: { defaultCity?: string } = {}
 
   return (
     <div className="container mx-auto px-4 py-8">
-      <div className="mb-6">
-        <SearchBar defaultCity={city} defaultType={type} defaultStatus={status} compact />
+      <div className="mb-6 flex gap-2">
+        <div className="relative flex-1">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+          <Input
+            placeholder="Search by title, city or keyword..."
+            value={keyword}
+            onChange={(e) => handleKeywordChange(e.target.value)}
+            className="pl-9"
+          />
+        </div>
       </div>
 
       <div className="flex items-center justify-between mb-6 gap-4 flex-wrap">
