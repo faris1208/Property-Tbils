@@ -5,11 +5,12 @@ import { PropertiesService } from './properties.service';
 import { Property } from './entities/property.entity';
 import { PropertyImage } from './entities/property-image.entity';
 import { PropertyAmenity } from './entities/property-amenity.entity';
+import { Agent } from '../agents/entities/agent.entity';
 import { MediaModule } from '../media/media.module';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([Property, PropertyImage, PropertyAmenity]),
+    TypeOrmModule.forFeature([Property, PropertyImage, PropertyAmenity, Agent]),
     MediaModule,
   ],
   controllers: [PropertiesController],

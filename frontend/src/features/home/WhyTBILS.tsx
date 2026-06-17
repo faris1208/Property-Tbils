@@ -44,10 +44,10 @@ export function WhyTBILS() {
 
   useEffect(() => {
     api.get('/properties/public-stats').then((r) => {
-      const { totalProperties, totalCities } = r.data.data;
+      const { totalProperties, totalCities, totalAgents } = r.data.data;
       setStats([
         { value: `${totalProperties.toLocaleString()}+`, label: 'Properties Listed' },
-        { value: '500+', label: 'Verified Agents' },
+        { value: `${totalAgents.toLocaleString()}+`, label: 'Verified Agents' },
         { value: `${totalCities}+`, label: 'Cities Covered' },
         { value: '98%', label: 'Client Satisfaction' },
       ]);

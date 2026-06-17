@@ -15,6 +15,7 @@ import { QueryPropertyDto } from './dto/query-property.dto';
 import { MediaService } from '../media/media.service';
 import { UserRole } from '../../common/decorators/roles.decorator';
 import { User } from '../auth/entities/user.entity';
+import { Agent } from '../agents/entities/agent.entity';
 
 @Injectable()
 export class PropertiesService {
@@ -22,6 +23,7 @@ export class PropertiesService {
     @InjectRepository(Property) private propertiesRepo: Repository<Property>,
     @InjectRepository(PropertyImage) private imagesRepo: Repository<PropertyImage>,
     @InjectRepository(PropertyAmenity) private amenitiesRepo: Repository<PropertyAmenity>,
+    @InjectRepository(Agent) private agentsRepo: Repository<Agent>,
     private mediaService: MediaService,
   ) {}
 
@@ -170,13 +172,14 @@ export class PropertiesService {
   }
 
   async getPublicStats() {
-    const [totalProperties, citiesResult] = await Promise.all([
+    const [totalProperties, citiesResult, totalAgents] = await Promise.all([
       this.propertiesRepo.count({ where: { approvalStatus: ApprovalStatus.APPROVED } }),
       this.propertiesRepo
         .createQueryBuilder('p')
         .select('COUNT(DISTINCT p.city)', 'count')
         .where('p.approvalStatus = :status', { status: ApprovalStatus.APPROVED })
         .getRawOne<{ count: string }>(),
+      this.agentsRepo.count({ where: { isVerified: true } }),
     ]);
 
     return {
@@ -184,6 +187,7 @@ export class PropertiesService {
       data: {
         totalProperties,
         totalCities: parseInt(citiesResult?.count ?? '0', 10),
+        totalAgents,
       },
     };
   }
