@@ -90,8 +90,17 @@ export class PropertiesService {
   }
 
   async findFeatured() {
-    return this.propertiesRepo.find({
+    const featured = await this.propertiesRepo.find({
       where: { isFeatured: true, approvalStatus: ApprovalStatus.APPROVED },
+      relations: ['images', 'agent'],
+      order: { createdAt: 'DESC' },
+      take: 6,
+    });
+
+    if (featured.length > 0) return featured;
+
+    return this.propertiesRepo.find({
+      where: { approvalStatus: ApprovalStatus.APPROVED },
       relations: ['images', 'agent'],
       order: { createdAt: 'DESC' },
       take: 6,
@@ -169,6 +178,24 @@ export class PropertiesService {
     });
     if (!property) throw new NotFoundException('Property not found');
     return property;
+  }
+
+  async getCityCounts() {
+    const rows = await this.propertiesRepo
+      .createQueryBuilder('p')
+      .select('p.city', 'city')
+      .addSelect('COUNT(*)', 'count')
+      .where('p.approvalStatus = :status', { status: ApprovalStatus.APPROVED })
+      .groupBy('p.city')
+      .getRawMany<{ city: string; count: string }>();
+
+    return {
+      success: true,
+      data: rows.reduce<Record<string, number>>((acc, r) => {
+        acc[r.city] = parseInt(r.count, 10);
+        return acc;
+      }, {}),
+    };
   }
 
   async getPublicStats() {
