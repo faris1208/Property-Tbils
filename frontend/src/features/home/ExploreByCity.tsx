@@ -2,20 +2,40 @@
 
 import Link from 'next/link';
 import Image from 'next/image';
+import { useEffect, useState } from 'react';
 import { MapPin, ArrowRight } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { AnimateIn, StaggerChildren, staggerItem } from '@/components/ui/AnimateIn';
+import { api } from '@/lib/api';
 
-const cities = [
-  { name: 'Lagos',         slug: 'lagos',          count: '3,200+', image: '/assets/Images/homepage/lagos.jpeg',        span: 'md:col-span-2 md:row-span-2' },
-  { name: 'Abuja',         slug: 'abuja',          count: '1,800+', image: '/assets/Images/homepage/tb1.jpg',            span: '' },
-  { name: 'Port Harcourt', slug: 'port-harcourt',  count: '900+',   image: '/assets/Images/homepage/Portharcourt.jpeg',  span: '' },
-  { name: 'Ibadan',        slug: 'ibadan',         count: '600+',   image: '/assets/Images/homepage/ibadan.jpeg',         span: '' },
-  { name: 'Enugu',         slug: 'enugu',          count: '400+',   image: '/assets/Images/homepage/tb2.jpg',             span: '' },
-  { name: 'International', slug: null,             count: '200+',   image: '/assets/Images/homepage/tey17.jpeg',          span: '' },
-];
+const cityImages: Record<string, string> = {
+  'Lagos':         '/assets/Images/homepage/tey17.jpeg',
+  'Ogun':          '/assets/Images/homepage/tb4.jpg',
+  'Abuja':         '/assets/Images/homepage/tb1.jpg',
+  'Port Harcourt': '/assets/Images/homepage/Portharcourt.jpeg',
+  'Oyo':           '/assets/Images/homepage/ibadan.jpeg',
+  'Ibadan':        '/assets/Images/homepage/ibadan.jpeg',
+  'Enugu':         '/assets/Images/homepage/tb2.jpg',
+};
+const fallbackImage = '/assets/Images/homepage/tey17.jpeg';
+
+function toSlug(city: string) {
+  return city.toLowerCase().replace(/\s+/g, '-');
+}
 
 export function ExploreByCity() {
+  const [cities, setCities] = useState<{ name: string; count: number }[]>([]);
+
+  useEffect(() => {
+    api.get('/properties/city-counts').then((r) => {
+      const data: Record<string, number> = r.data.data;
+      const sorted = Object.entries(data)
+        .sort((a, b) => b[1] - a[1])
+        .slice(0, 4)
+        .map(([name, count]) => ({ name, count }));
+      setCities(sorted);
+    }).catch(() => {});
+  }, []);
   return (
     <section className="py-20 bg-slate-50">
       <div className="container mx-auto px-4">
@@ -39,7 +59,11 @@ export function ExploreByCity() {
         </AnimateIn>
 
         <StaggerChildren className="grid grid-cols-2 md:grid-cols-4 gap-4 auto-rows-[140px]">
-          {cities.map(({ name, slug, count, image, span }) => (
+          {cities.map(({ name, count }, i) => {
+            const image = cityImages[name] ?? fallbackImage;
+            const slug = toSlug(name);
+            const span = i === 0 ? 'md:col-span-2 md:row-span-2' : '';
+            return (
             <motion.div
               key={name}
               variants={staggerItem}
@@ -48,7 +72,7 @@ export function ExploreByCity() {
               className={span}
             >
               <Link
-                href={slug ? `/cities/${slug}` : `/properties?city=${encodeURIComponent(name)}`}
+                href={`/cities/${slug}`}
                 className="relative flex flex-col justify-end h-full rounded-2xl overflow-hidden group block"
               >
                 <Image
@@ -64,7 +88,7 @@ export function ExploreByCity() {
                 <div className="relative z-10 p-5">
                   <div className="flex items-center gap-1.5 mb-1">
                     <MapPin className="w-3.5 h-3.5 text-white/70" />
-                    <p className="text-white/70 text-xs font-medium">{count} listings</p>
+                    <p className="text-white/70 text-xs font-medium">{count.toLocaleString()} listings</p>
                   </div>
                   <p className="text-white font-bold text-lg leading-tight drop-shadow">{name}</p>
                 </div>
@@ -75,7 +99,8 @@ export function ExploreByCity() {
                 </div>
               </Link>
             </motion.div>
-          ))}
+            );
+          })}
         </StaggerChildren>
       </div>
     </section>

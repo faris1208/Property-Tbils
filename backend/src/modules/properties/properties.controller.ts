@@ -43,6 +43,12 @@ export class PropertiesController {
     return this.propertiesService.getPublicStats();
   }
 
+  @Public()
+  @Get('city-counts')
+  getCityCounts() {
+    return this.propertiesService.getCityCounts();
+  }
+
   @Get('my')
   findMyProperties(@CurrentUser() user: User) {
     return this.propertiesService.findMyProperties(user.id);

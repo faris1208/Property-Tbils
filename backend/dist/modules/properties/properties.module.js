@@ -14,6 +14,7 @@ const properties_service_1 = require("./properties.service");
 const property_entity_1 = require("./entities/property.entity");
 const property_image_entity_1 = require("./entities/property-image.entity");
 const property_amenity_entity_1 = require("./entities/property-amenity.entity");
+const agent_entity_1 = require("../agents/entities/agent.entity");
 const media_module_1 = require("../media/media.module");
 let PropertiesModule = class PropertiesModule {
 };
@@ -21,7 +22,7 @@ exports.PropertiesModule = PropertiesModule;
 exports.PropertiesModule = PropertiesModule = __decorate([
     (0, common_1.Module)({
         imports: [
-            typeorm_1.TypeOrmModule.forFeature([property_entity_1.Property, property_image_entity_1.PropertyImage, property_amenity_entity_1.PropertyAmenity]),
+            typeorm_1.TypeOrmModule.forFeature([property_entity_1.Property, property_image_entity_1.PropertyImage, property_amenity_entity_1.PropertyAmenity, agent_entity_1.Agent]),
             media_module_1.MediaModule,
         ],
         controllers: [properties_controller_1.PropertiesController],

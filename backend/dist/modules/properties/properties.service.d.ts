@@ -7,12 +7,14 @@ import { UpdatePropertyDto } from './dto/update-property.dto';
 import { QueryPropertyDto } from './dto/query-property.dto';
 import { MediaService } from '../media/media.service';
 import { User } from '../auth/entities/user.entity';
+import { Agent } from '../agents/entities/agent.entity';
 export declare class PropertiesService {
     private propertiesRepo;
     private imagesRepo;
     private amenitiesRepo;
+    private agentsRepo;
     private mediaService;
-    constructor(propertiesRepo: Repository<Property>, imagesRepo: Repository<PropertyImage>, amenitiesRepo: Repository<PropertyAmenity>, mediaService: MediaService);
+    constructor(propertiesRepo: Repository<Property>, imagesRepo: Repository<PropertyImage>, amenitiesRepo: Repository<PropertyAmenity>, agentsRepo: Repository<Agent>, mediaService: MediaService);
     create(dto: CreatePropertyDto, agent: User): Promise<Property>;
     findMyProperties(agentId: string): Promise<Property[]>;
     findAll(query: QueryPropertyDto): Promise<{
@@ -36,11 +38,16 @@ export declare class PropertiesService {
         message: string;
     }>;
     findOne(id: string): Promise<Property>;
+    getCityCounts(): Promise<{
+        success: boolean;
+        data: Record<string, number>;
+    }>;
     getPublicStats(): Promise<{
         success: boolean;
         data: {
             totalProperties: number;
             totalCities: number;
+            totalAgents: number;
         };
     }>;
 }

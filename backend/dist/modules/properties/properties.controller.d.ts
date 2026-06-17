@@ -22,7 +22,12 @@ export declare class PropertiesController {
         data: {
             totalProperties: number;
             totalCities: number;
+            totalAgents: number;
         };
+    }>;
+    getCityCounts(): Promise<{
+        success: boolean;
+        data: Record<string, number>;
     }>;
     findMyProperties(user: User): Promise<import("./entities/property.entity").Property[]>;
     findBySlug(slug: string): Promise<import("./entities/property.entity").Property>;

@@ -38,6 +38,9 @@ let PropertiesController = class PropertiesController {
     getPublicStats() {
         return this.propertiesService.getPublicStats();
     }
+    getCityCounts() {
+        return this.propertiesService.getCityCounts();
+    }
     findMyProperties(user) {
         return this.propertiesService.findMyProperties(user.id);
     }
@@ -83,6 +86,13 @@ __decorate([
     __metadata("design:paramtypes", []),
     __metadata("design:returntype", void 0)
 ], PropertiesController.prototype, "getPublicStats", null);
+__decorate([
+    (0, public_decorator_1.Public)(),
+    (0, common_1.Get)('city-counts'),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", []),
+    __metadata("design:returntype", void 0)
+], PropertiesController.prototype, "getCityCounts", null);
 __decorate([
     (0, common_1.Get)('my'),
     __param(0, (0, current_user_decorator_1.CurrentUser)()),

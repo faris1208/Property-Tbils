@@ -25,15 +25,18 @@ const property_image_entity_1 = require("./entities/property-image.entity");
 const property_amenity_entity_1 = require("./entities/property-amenity.entity");
 const media_service_1 = require("../media/media.service");
 const roles_decorator_1 = require("../../common/decorators/roles.decorator");
+const agent_entity_1 = require("../agents/entities/agent.entity");
 let PropertiesService = class PropertiesService {
     propertiesRepo;
     imagesRepo;
     amenitiesRepo;
+    agentsRepo;
     mediaService;
-    constructor(propertiesRepo, imagesRepo, amenitiesRepo, mediaService) {
+    constructor(propertiesRepo, imagesRepo, amenitiesRepo, agentsRepo, mediaService) {
         this.propertiesRepo = propertiesRepo;
         this.imagesRepo = imagesRepo;
         this.amenitiesRepo = amenitiesRepo;
+        this.agentsRepo = agentsRepo;
         this.mediaService = mediaService;
     }
     async create(dto, agent) {
@@ -93,8 +96,16 @@ let PropertiesService = class PropertiesService {
         };
     }
     async findFeatured() {
-        return this.propertiesRepo.find({
+        const featured = await this.propertiesRepo.find({
             where: { isFeatured: true, approvalStatus: property_entity_1.ApprovalStatus.APPROVED },
+            relations: ['images', 'agent'],
+            order: { createdAt: 'DESC' },
+            take: 6,
+        });
+        if (featured.length > 0)
+            return featured;
+        return this.propertiesRepo.find({
+            where: { approvalStatus: property_entity_1.ApprovalStatus.APPROVED },
             relations: ['images', 'agent'],
             order: { createdAt: 'DESC' },
             take: 6,
@@ -163,20 +174,38 @@ let PropertiesService = class PropertiesService {
             throw new common_1.NotFoundException('Property not found');
         return property;
     }
+    async getCityCounts() {
+        const rows = await this.propertiesRepo
+            .createQueryBuilder('p')
+            .select('p.city', 'city')
+            .addSelect('COUNT(*)', 'count')
+            .where('p.approvalStatus = :status', { status: property_entity_1.ApprovalStatus.APPROVED })
+            .groupBy('p.city')
+            .getRawMany();
+        return {
+            success: true,
+            data: rows.reduce((acc, r) => {
+                acc[r.city] = parseInt(r.count, 10);
+                return acc;
+            }, {}),
+        };
+    }
     async getPublicStats() {
-        const [totalProperties, citiesResult] = await Promise.all([
+        const [totalProperties, citiesResult, totalAgents] = await Promise.all([
             this.propertiesRepo.count({ where: { approvalStatus: property_entity_1.ApprovalStatus.APPROVED } }),
             this.propertiesRepo
                 .createQueryBuilder('p')
                 .select('COUNT(DISTINCT p.city)', 'count')
                 .where('p.approvalStatus = :status', { status: property_entity_1.ApprovalStatus.APPROVED })
                 .getRawOne(),
+            this.agentsRepo.count({ where: { isVerified: true } }),
         ]);
         return {
             success: true,
             data: {
                 totalProperties,
                 totalCities: parseInt(citiesResult?.count ?? '0', 10),
+                totalAgents,
             },
         };
     }
@@ -187,7 +216,9 @@ exports.PropertiesService = PropertiesService = __decorate([
     __param(0, (0, typeorm_1.InjectRepository)(property_entity_1.Property)),
     __param(1, (0, typeorm_1.InjectRepository)(property_image_entity_1.PropertyImage)),
     __param(2, (0, typeorm_1.InjectRepository)(property_amenity_entity_1.PropertyAmenity)),
+    __param(3, (0, typeorm_1.InjectRepository)(agent_entity_1.Agent)),
     __metadata("design:paramtypes", [typeorm_2.Repository,
+        typeorm_2.Repository,
         typeorm_2.Repository,
         typeorm_2.Repository,
         media_service_1.MediaService])

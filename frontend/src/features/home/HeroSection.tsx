@@ -13,11 +13,11 @@ const videos = [
 
 function CountUp({ target, suffix }: { target: number; suffix: string }) {
   const [count, setCount] = useState(0);
-  const ref = useRef(false);
+  const started = useRef(false);
 
   useEffect(() => {
-    if (ref.current) return;
-    ref.current = true;
+    if (target === 0 || started.current) return;
+    started.current = true;
 
     const duration = 2000;
     const steps = 60;
@@ -54,10 +54,10 @@ export function HeroSection() {
 
   useEffect(() => {
     api.get('/properties/public-stats').then((r) => {
-      const { totalProperties, totalCities } = r.data.data;
+      const { totalProperties, totalCities, totalAgents } = r.data.data;
       setStats([
         { value: totalProperties, suffix: '+', label: 'Properties' },
-        { value: 500, suffix: '+', label: 'Verified Agents' },
+        { value: totalAgents, suffix: '+', label: 'Verified Agents' },
         { value: totalCities, suffix: '+', label: 'Cities' },
       ]);
     }).catch(() => {});
@@ -112,7 +112,7 @@ export function HeroSection() {
           transition={{ duration: 0.6, ease: 'easeOut' }}
         >
           <Badge className="mb-6 bg-white/10 text-white border-white/20 hover:bg-white/10 backdrop-blur-sm">
-            🏠 Nigeria&apos;s Trusted Property Marketplace
+            🏠 Nigeria&apos;s Trusted Property Marketing & Management Company
           </Badge>
         </motion.div>
 
@@ -122,8 +122,8 @@ export function HeroSection() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.7, delay: 0.15, ease: 'easeOut' }}
         >
-          Find Your Perfect{' '}
-          <span className="text-blue-400">Property</span> in Nigeria
+          Property Marketing &{' '}
+          <span className="text-blue-400">Management</span> Experts in Nigeria
         </motion.h1>
 
         <motion.p
@@ -132,8 +132,7 @@ export function HeroSection() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.7, delay: 0.3, ease: 'easeOut' }}
         >
-          Thousands of verified listings across Lagos, Abuja, Port Harcourt and beyond.
-          Buy, rent or list your property with trusted agents.
+          Find, Market, Manage, and Maximize the Value of Your Property across Lagos, Abuja, Port Harcourt, and Ibadan.
         </motion.p>
 
         <motion.div
