@@ -63,6 +63,66 @@ const tbilSuitesSections: DropdownSection[] = [
   },
 ];
 
+function DropdownMenu({ open, sections, onClose }: { open: boolean; sections: DropdownSection[]; onClose: () => void }) {
+  if (!open) return null;
+  return (
+    <div className="absolute top-full left-0 mt-2 w-60 bg-[#2d3748] rounded-xl shadow-2xl py-2 z-50">
+      {sections.map((section, si) => (
+        <div key={si}>
+          {si > 0 && <div className="my-2 border-t border-white/10" />}
+          {section.heading && (
+            <p className="px-4 pt-2 pb-1 text-xs font-medium text-white/50 uppercase tracking-wide">
+              {section.heading}
+            </p>
+          )}
+          {section.items.map((item) =>
+            item.external ? (
+              <a
+                key={item.label}
+                href={item.href}
+                target="_blank"
+                rel="noopener noreferrer"
+                onClick={onClose}
+                className="block px-4 py-2.5 text-sm text-white/85 hover:text-white hover:bg-white/10 transition-colors"
+              >
+                {item.label}
+              </a>
+            ) : (
+              <Link
+                key={item.label}
+                href={item.href}
+                onClick={onClose}
+                className="block px-4 py-2.5 text-sm text-white/85 hover:text-white hover:bg-white/10 transition-colors"
+              >
+                {item.label}
+              </Link>
+            )
+          )}
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function LinkDropdown({ label, href, sections }: { label: string; href: string; sections: DropdownSection[] }) {
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+  const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const show = () => { if (timeoutRef.current) clearTimeout(timeoutRef.current); setOpen(true); };
+  const hide = () => { timeoutRef.current = setTimeout(() => setOpen(false), 100); };
+
+  return (
+    <div ref={ref} className="relative" onMouseEnter={show} onMouseLeave={hide}>
+      <Link href={href} className="flex items-center gap-1 text-sm font-medium text-white/80 hover:text-white transition-colors">
+        {label}
+        <ChevronDown className={`w-3.5 h-3.5 transition-transform ${open ? 'rotate-180' : ''}`} />
+      </Link>
+      <DropdownMenu open={open} sections={sections} onClose={() => setOpen(false)} />
+    </div>
+  );
+}
+
 function Dropdown({ label, sections }: { label: string; sections: DropdownSection[] }) {
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
@@ -85,43 +145,7 @@ function Dropdown({ label, sections }: { label: string; sections: DropdownSectio
         {label}
         <ChevronDown className={`w-3.5 h-3.5 transition-transform ${open ? 'rotate-180' : ''}`} />
       </button>
-      {open && (
-        <div className="absolute top-full left-0 mt-2 w-60 bg-[#2d3748] rounded-xl shadow-2xl py-2 z-50">
-          {sections.map((section, si) => (
-            <div key={si}>
-              {si > 0 && <div className="my-2 border-t border-white/10" />}
-              {section.heading && (
-                <p className="px-4 pt-2 pb-1 text-xs font-medium text-white/50 uppercase tracking-wide">
-                  {section.heading}
-                </p>
-              )}
-              {section.items.map((item) =>
-                item.external ? (
-                  <a
-                    key={item.label}
-                    href={item.href}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    onClick={() => setOpen(false)}
-                    className="block px-4 py-2.5 text-sm text-white/85 hover:text-white hover:bg-white/10 transition-colors"
-                  >
-                    {item.label}
-                  </a>
-                ) : (
-                  <Link
-                    key={item.label}
-                    href={item.href}
-                    onClick={() => setOpen(false)}
-                    className="block px-4 py-2.5 text-sm text-white/85 hover:text-white hover:bg-white/10 transition-colors"
-                  >
-                    {item.label}
-                  </Link>
-                )
-              )}
-            </div>
-          ))}
-        </div>
-      )}
+      <DropdownMenu open={open} sections={sections} onClose={() => setOpen(false)} />
     </div>
   );
 }
@@ -172,8 +196,8 @@ export function Header() {
           >
             About Us
           </Link>
-          <Dropdown label="Buy" sections={buySections} />
-          <Dropdown label="Rent" sections={rentSections} />
+          <LinkDropdown label="Buy" href="/properties?status=sale" sections={buySections} />
+          <LinkDropdown label="Rent" href="/properties?status=rent" sections={rentSections} />
           <Dropdown label="Our Services" sections={servicesSections} />
           <Dropdown label="TBIL Suites" sections={tbilSuitesSections} />
         </nav>
