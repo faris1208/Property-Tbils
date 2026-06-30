@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { ArrowRight } from 'lucide-react';
 import { PropertyCard } from '@/components/property/PropertyCard';
+import { PropertyCardSkeleton } from '@/components/property/PropertyCardSkeleton';
 import { AnimateIn, StaggerChildren, staggerItem } from '@/components/ui/AnimateIn';
 import { motion } from 'framer-motion';
 import { useEffect, useState } from 'react';
@@ -12,13 +13,16 @@ import { Button } from '@/components/ui/button';
 
 export function FeaturedListings() {
   const [properties, setProperties] = useState<Property[]>([]);
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
 
   const load = () => {
     setError(false);
+    setLoading(true);
     api.get('/properties/featured')
       .then((r) => setProperties(r.data.data || []))
-      .catch(() => setError(true));
+      .catch(() => setError(true))
+      .finally(() => setLoading(false));
   };
 
   useEffect(() => { load(); }, []);
@@ -45,13 +49,15 @@ export function FeaturedListings() {
           </Link>
         </AnimateIn>
 
-        {error ? (
+        {loading ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-7">
+            {Array.from({ length: 9 }).map((_, i) => <PropertyCardSkeleton key={i} />)}
+          </div>
+        ) : error ? (
           <div className="text-center py-16 border border-dashed border-slate-200 rounded-2xl">
             <p className="text-slate-400 mb-3">Could not load featured properties.</p>
             <Button variant="outline" size="sm" onClick={load}>Try again</Button>
           </div>
-        ) : properties.length === 0 ? (
-          <p className="text-center text-slate-400 py-16">No featured properties available yet.</p>
         ) : (
           <StaggerChildren className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-7">
             {properties.map((p) => (

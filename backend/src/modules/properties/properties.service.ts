@@ -94,7 +94,7 @@ export class PropertiesService {
       where: { isFeatured: true, approvalStatus: ApprovalStatus.APPROVED },
       relations: ['images', 'agent'],
       order: { createdAt: 'DESC' },
-      take: 6,
+      take: 9,
     });
 
     if (featured.length > 0) return featured;
@@ -103,7 +103,7 @@ export class PropertiesService {
       where: { approvalStatus: ApprovalStatus.APPROVED },
       relations: ['images', 'agent'],
       order: { createdAt: 'DESC' },
-      take: 6,
+      take: 9,
     });
   }
 
