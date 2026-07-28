@@ -37,7 +37,7 @@ exports.AppModule = AppModule = __decorate([
                 isGlobal: true,
                 validationSchema: env_validation_1.envValidationSchema,
             }),
-            throttler_1.ThrottlerModule.forRoot([{ ttl: 60000, limit: 10 }]),
+            throttler_1.ThrottlerModule.forRoot([{ ttl: 60000, limit: 60 }]),
             typeorm_1.TypeOrmModule.forRootAsync({
                 inject: [config_1.ConfigService],
                 useFactory: (config) => ({

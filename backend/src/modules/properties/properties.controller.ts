@@ -11,6 +11,7 @@ import {
   UploadedFiles,
 } from '@nestjs/common';
 import { AnyFilesInterceptor } from '@nestjs/platform-express';
+import { SkipThrottle } from '@nestjs/throttler';
 import { PropertiesService } from './properties.service';
 import { CreatePropertyDto } from './dto/create-property.dto';
 import { UpdatePropertyDto } from './dto/update-property.dto';
@@ -26,24 +27,28 @@ export class PropertiesController {
   constructor(private propertiesService: PropertiesService) {}
 
   @Public()
+  @SkipThrottle()
   @Get()
   findAll(@Query() query: QueryPropertyDto) {
     return this.propertiesService.findAll(query);
   }
 
   @Public()
+  @SkipThrottle()
   @Get('featured')
   findFeatured() {
     return this.propertiesService.findFeatured();
   }
 
   @Public()
+  @SkipThrottle()
   @Get('public-stats')
   getPublicStats() {
     return this.propertiesService.getPublicStats();
   }
 
   @Public()
+  @SkipThrottle()
   @Get('city-counts')
   getCityCounts() {
     return this.propertiesService.getCityCounts();

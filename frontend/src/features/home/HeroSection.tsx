@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from 'react';
 import { motion } from 'framer-motion';
 import { SearchBar } from '@/components/search/SearchBar';
 import { Badge } from '@/components/ui/badge';
-import { api } from '@/lib/api';
+import { usePublicStats } from '@/hooks/usePublicStats';
 
 const videos = [
   '/assets/Images/homepage/banner.mp4',
@@ -46,22 +46,12 @@ function CountUp({ target, suffix }: { target: number; suffix: string }) {
 export function HeroSection() {
   const [current, setCurrent] = useState(0);
   const videoRef = useRef<HTMLVideoElement>(null);
-  const [stats, setStats] = useState([
-    { value: 0, suffix: '+', label: 'Properties' },
-    { value: 0, suffix: '+', label: 'Verified Agents' },
-    { value: 0, suffix: '+', label: 'Cities' },
-  ]);
-
-  useEffect(() => {
-    api.get('/properties/public-stats').then((r) => {
-      const { totalProperties, totalCities, totalAgents } = r.data.data;
-      setStats([
-        { value: totalProperties, suffix: '+', label: 'Properties' },
-        { value: totalAgents, suffix: '+', label: 'Verified Agents' },
-        { value: totalCities, suffix: '+', label: 'Cities' },
-      ]);
-    }).catch(() => {});
-  }, []);
+  const publicStats = usePublicStats();
+  const stats = [
+    { value: publicStats?.totalProperties ?? 0, suffix: '+', label: 'Properties' },
+    { value: publicStats?.totalAgents ?? 0, suffix: '+', label: 'Verified Agents' },
+    { value: publicStats?.totalCities ?? 0, suffix: '+', label: 'Cities' },
+  ];
 
   useEffect(() => {
     const video = videoRef.current;

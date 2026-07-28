@@ -15,6 +15,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.PropertiesController = void 0;
 const common_1 = require("@nestjs/common");
 const platform_express_1 = require("@nestjs/platform-express");
+const throttler_1 = require("@nestjs/throttler");
 const properties_service_1 = require("./properties.service");
 const create_property_dto_1 = require("./dto/create-property.dto");
 const update_property_dto_1 = require("./dto/update-property.dto");
@@ -66,6 +67,7 @@ let PropertiesController = class PropertiesController {
 exports.PropertiesController = PropertiesController;
 __decorate([
     (0, public_decorator_1.Public)(),
+    (0, throttler_1.SkipThrottle)(),
     (0, common_1.Get)(),
     __param(0, (0, common_1.Query)()),
     __metadata("design:type", Function),
@@ -74,6 +76,7 @@ __decorate([
 ], PropertiesController.prototype, "findAll", null);
 __decorate([
     (0, public_decorator_1.Public)(),
+    (0, throttler_1.SkipThrottle)(),
     (0, common_1.Get)('featured'),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", []),
@@ -81,6 +84,7 @@ __decorate([
 ], PropertiesController.prototype, "findFeatured", null);
 __decorate([
     (0, public_decorator_1.Public)(),
+    (0, throttler_1.SkipThrottle)(),
     (0, common_1.Get)('public-stats'),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", []),
@@ -88,6 +92,7 @@ __decorate([
 ], PropertiesController.prototype, "getPublicStats", null);
 __decorate([
     (0, public_decorator_1.Public)(),
+    (0, throttler_1.SkipThrottle)(),
     (0, common_1.Get)('city-counts'),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", []),

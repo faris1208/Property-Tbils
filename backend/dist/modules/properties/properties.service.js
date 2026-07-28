@@ -100,7 +100,7 @@ let PropertiesService = class PropertiesService {
             where: { isFeatured: true, approvalStatus: property_entity_1.ApprovalStatus.APPROVED },
             relations: ['images', 'agent'],
             order: { createdAt: 'DESC' },
-            take: 6,
+            take: 9,
         });
         if (featured.length > 0)
             return featured;
@@ -108,7 +108,7 @@ let PropertiesService = class PropertiesService {
             where: { approvalStatus: property_entity_1.ApprovalStatus.APPROVED },
             relations: ['images', 'agent'],
             order: { createdAt: 'DESC' },
-            take: 6,
+            take: 9,
         });
     }
     async findBySlug(slug) {
