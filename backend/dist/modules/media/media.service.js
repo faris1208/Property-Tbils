@@ -13,7 +13,14 @@ exports.MediaService = void 0;
 const common_1 = require("@nestjs/common");
 const config_1 = require("@nestjs/config");
 const cloudinary_1 = require("cloudinary");
-const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'video/mp4'];
+const ALLOWED_TYPES = [
+    'image/jpeg',
+    'image/png',
+    'image/webp',
+    'image/heic',
+    'image/heif',
+    'video/mp4',
+];
 const MAX_SIZE = 10 * 1024 * 1024;
 let MediaService = class MediaService {
     constructor(config) {
@@ -25,7 +32,7 @@ let MediaService = class MediaService {
     }
     async upload(file, folder = 'properties') {
         if (!ALLOWED_TYPES.includes(file.mimetype)) {
-            throw new common_1.BadRequestException('Invalid file type. Allowed: jpeg, png, webp, mp4');
+            throw new common_1.BadRequestException('Invalid file type. Allowed: jpeg, png, webp, heic, mp4');
         }
         if (file.size > MAX_SIZE) {
             throw new common_1.BadRequestException('File too large. Max size is 10MB');

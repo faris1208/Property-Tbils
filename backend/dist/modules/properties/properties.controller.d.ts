@@ -36,7 +36,13 @@ export declare class PropertiesController {
     remove(id: string, user: User): Promise<{
         message: string;
     }>;
-    uploadImages(id: string, files: Express.Multer.File[], user: User): Promise<import("./entities/property-image.entity").PropertyImage[]>;
+    uploadImages(id: string, files: Express.Multer.File[], user: User): Promise<{
+        saved: import("./entities/property-image.entity").PropertyImage[];
+        failed: {
+            filename: string;
+            reason: string;
+        }[];
+    }>;
     deleteImage(id: string, imageId: string, user: User): Promise<{
         message: string;
     }>;

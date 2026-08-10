@@ -2,6 +2,7 @@ import {
   Injectable,
   NotFoundException,
   ForbiddenException,
+  BadRequestException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
@@ -142,21 +143,46 @@ export class PropertiesService {
       throw new ForbiddenException('Not allowed');
     }
 
-    const uploaded = await Promise.all(
+    // Settled, not all: one rejected file (bad type, too large, Cloudinary
+    // hiccup) must not discard the images that uploaded fine.
+    const results = await Promise.allSettled(
       files.map((f) => this.mediaService.upload(f, 'properties')),
     );
 
-    const images = uploaded.map((r, i) =>
-      this.imagesRepo.create({
-        propertyId: id,
-        url: r.secure_url,
-        publicId: r.public_id,
-        isPrimary: i === 0 && property.images.length === 0,
-        displayOrder: property.images.length + i,
-      }),
-    );
+    const existingCount = property.images.length;
+    const images: PropertyImage[] = [];
+    const failed: { filename: string; reason: string }[] = [];
 
-    return this.imagesRepo.save(images);
+    results.forEach((result, i) => {
+      if (result.status === 'fulfilled') {
+        images.push(
+          this.imagesRepo.create({
+            propertyId: id,
+            url: result.value.secure_url,
+            publicId: result.value.public_id,
+            // Index against what actually saved, not the original file list.
+            isPrimary: existingCount === 0 && images.length === 0,
+            displayOrder: existingCount + images.length,
+          }),
+        );
+      } else {
+        const reason: unknown = result.reason;
+        failed.push({
+          filename: files[i]?.originalname ?? `file ${i + 1}`,
+          reason: reason instanceof Error ? reason.message : 'Upload failed',
+        });
+      }
+    });
+
+    const saved = images.length > 0 ? await this.imagesRepo.save(images) : [];
+
+    if (saved.length === 0 && failed.length > 0) {
+      throw new BadRequestException(
+        `No images could be uploaded. ${failed[0].filename}: ${failed[0].reason}`,
+      );
+    }
+
+    return { saved, failed };
   }
 
   async deleteImage(id: string, imageId: string, user: User) {

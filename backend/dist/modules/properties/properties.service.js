@@ -142,15 +142,33 @@ let PropertiesService = class PropertiesService {
         if (property.agentId !== user.id && user.role !== roles_decorator_1.UserRole.ADMIN) {
             throw new common_1.ForbiddenException('Not allowed');
         }
-        const uploaded = await Promise.all(files.map((f) => this.mediaService.upload(f, 'properties')));
-        const images = uploaded.map((r, i) => this.imagesRepo.create({
-            propertyId: id,
-            url: r.secure_url,
-            publicId: r.public_id,
-            isPrimary: i === 0 && property.images.length === 0,
-            displayOrder: property.images.length + i,
-        }));
-        return this.imagesRepo.save(images);
+        const results = await Promise.allSettled(files.map((f) => this.mediaService.upload(f, 'properties')));
+        const existingCount = property.images.length;
+        const images = [];
+        const failed = [];
+        results.forEach((result, i) => {
+            if (result.status === 'fulfilled') {
+                images.push(this.imagesRepo.create({
+                    propertyId: id,
+                    url: result.value.secure_url,
+                    publicId: result.value.public_id,
+                    isPrimary: existingCount === 0 && images.length === 0,
+                    displayOrder: existingCount + images.length,
+                }));
+            }
+            else {
+                const reason = result.reason;
+                failed.push({
+                    filename: files[i]?.originalname ?? `file ${i + 1}`,
+                    reason: reason instanceof Error ? reason.message : 'Upload failed',
+                });
+            }
+        });
+        const saved = images.length > 0 ? await this.imagesRepo.save(images) : [];
+        if (saved.length === 0 && failed.length > 0) {
+            throw new common_1.BadRequestException(`No images could be uploaded. ${failed[0].filename}: ${failed[0].reason}`);
+        }
+        return { saved, failed };
     }
     async deleteImage(id, imageId, user) {
         const property = await this.findOne(id);

@@ -15,6 +15,8 @@ async function bootstrap() {
     app.set('trust proxy', 1);
     app.use((0, helmet_1.default)());
     app.use(compression());
+    app.useBodyParser('json', { limit: '2mb' });
+    app.useBodyParser('urlencoded', { limit: '2mb', extended: true });
     const allowedOrigins = (process.env.FRONTEND_URL || 'http://localhost:3000')
         .split(',')
         .map((o) => o.trim().replace(/\/$/, ''));

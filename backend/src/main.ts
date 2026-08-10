@@ -16,6 +16,10 @@ async function bootstrap() {
   app.use(helmet());
   app.use(compression());
 
+  // Default body limit is 100kb, which a long property description can exceed.
+  app.useBodyParser('json', { limit: '2mb' });
+  app.useBodyParser('urlencoded', { limit: '2mb', extended: true });
+
   const allowedOrigins = (process.env.FRONTEND_URL || 'http://localhost:3000')
     .split(',')
     .map((o) => o.trim().replace(/\/$/, ''));

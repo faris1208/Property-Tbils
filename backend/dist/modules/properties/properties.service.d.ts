@@ -33,7 +33,13 @@ export declare class PropertiesService {
     remove(id: string, user: User): Promise<{
         message: string;
     }>;
-    uploadImages(id: string, files: Express.Multer.File[], user: User): Promise<PropertyImage[]>;
+    uploadImages(id: string, files: Express.Multer.File[], user: User): Promise<{
+        saved: PropertyImage[];
+        failed: {
+            filename: string;
+            reason: string;
+        }[];
+    }>;
     deleteImage(id: string, imageId: string, user: User): Promise<{
         message: string;
     }>;

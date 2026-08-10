@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
+import axios from 'axios';
 import { ArrowLeft, Upload, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -12,7 +13,28 @@ import { Textarea } from '@/components/ui/textarea';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
-import { api } from '@/lib/api';
+import { api, getApiError } from '@/lib/api';
+
+const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5 MB
+// Mirrors the backend allow-list in media.service.ts.
+const ACCEPTED_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/heic', 'image/heif'];
+// Images go up a few at a time so no single request carries the whole payload.
+const UPLOAD_BATCH_SIZE = 3;
+const UPLOAD_TIMEOUT_MS = 120_000;
+
+/** Turns an axios failure into something an agent can act on. */
+function describeError(e: unknown): string {
+  if (axios.isAxiosError(e)) {
+    if (e.code === 'ECONNABORTED') {
+      return 'the upload timed out. Your connection may be too slow for this many photos — try again, or use fewer/smaller images.';
+    }
+    if (!e.response) {
+      return 'the server could not be reached. Check your internet connection and try again.';
+    }
+    return getApiError(e, 'the server rejected the request.');
+  }
+  return 'an unexpected error occurred.';
+}
 
 const NIGERIAN_STATES = [
   'Abia', 'Adamawa', 'Akwa Ibom', 'Anambra', 'Bauchi', 'Bayelsa', 'Benue', 'Borno',
@@ -111,6 +133,13 @@ export function PostPropertyForm() {
   const mainImageRef = useRef<HTMLInputElement>(null);
   const otherImagesRef = useRef<HTMLInputElement>(null);
 
+  // Set once the listing row exists, so a retry never creates a duplicate.
+  const [createdPropertyId, setCreatedPropertyId] = useState<string | null>(null);
+  const [imageError, setImageError] = useState('');
+  const [failedImages, setFailedImages] = useState<File[]>([]);
+  const [uploadProgress, setUploadProgress] = useState('');
+  const [isRetrying, setIsRetrying] = useState(false);
+
   const form = useForm<PropertyForm>({
     resolver: zodResolver(propertySchema),
     defaultValues: {
@@ -135,44 +164,130 @@ export function PostPropertyForm() {
     return () => window.removeEventListener('beforeunload', handler);
   }, [isDirty]);
 
+  /**
+   * Uploads in small batches so a slow connection can't blow the request
+   * timeout. Returns the files that never made it.
+   */
+  const uploadImages = async (propertyId: string, files: File[]): Promise<File[]> => {
+    const failures: File[] = [];
+    let lastReason = '';
+
+    for (let i = 0; i < files.length; i += UPLOAD_BATCH_SIZE) {
+      const batch = files.slice(i, i + UPLOAD_BATCH_SIZE);
+      setUploadProgress(
+        `Uploading photo ${i + 1}–${Math.min(i + batch.length, files.length)} of ${files.length}…`,
+      );
+
+      const formData = new FormData();
+      batch.forEach((f) => formData.append('files', f));
+
+      try {
+        const res = await api.post(`/properties/${propertyId}/images`, formData, {
+          timeout: UPLOAD_TIMEOUT_MS,
+        });
+        // The server saves what it can and reports the rest.
+        const rejected: { filename: string; reason: string }[] = res.data?.data?.failed ?? [];
+        rejected.forEach((r) => {
+          const file = batch.find((b) => b.name === r.filename);
+          if (file) failures.push(file);
+          lastReason = r.reason;
+        });
+      } catch (e) {
+        failures.push(...batch);
+        lastReason = describeError(e);
+      }
+    }
+
+    setUploadProgress('');
+    if (failures.length > 0) {
+      setImageError(
+        `Your listing was saved, but ${failures.length} of ${files.length} photo(s) did not upload — ${lastReason} It stays hidden from the public site until the photos are added.`,
+      );
+    }
+    return failures;
+  };
+
   const onSubmit = async (data: PropertyForm) => {
     setError('');
-    try {
-      const { termsAccepted: _, ...propertyData } = data;
-      const res = await api.post('/properties', propertyData);
-      const property = res.data.data;
+    setImageError('');
 
-      const allImages = [...(mainImage ? [mainImage] : []), ...otherImages];
-      if (allImages.length > 0 && property?.id) {
-        const formData = new FormData();
-        allImages.forEach((f) => formData.append('files', f));
-        await api.post(`/properties/${property.id}/images`, formData);
+    let propertyId = createdPropertyId;
+
+    // Only create the listing once, so a retry after an image failure
+    // doesn't leave duplicates behind.
+    if (!propertyId) {
+      try {
+        const { termsAccepted: _, ...propertyData } = data;
+        const res = await api.post('/properties', propertyData);
+        propertyId = res.data?.data?.id ?? null;
+        setCreatedPropertyId(propertyId);
+      } catch (e: unknown) {
+        setError(`Couldn't create listing — ${describeError(e)}`);
+        return;
       }
+    }
 
+    const allImages = [...(mainImage ? [mainImage] : []), ...otherImages];
+    if (allImages.length === 0 || !propertyId) {
       router.push('/agent');
-    } catch (e: unknown) {
-      const err = e as { response?: { data?: { error?: string } } };
-      setError(err.response?.data?.error || 'Failed to create listing');
+      return;
+    }
+
+    const failures = await uploadImages(propertyId, allImages);
+    if (failures.length > 0) {
+      setFailedImages(failures);
+      return; // stay put so the agent can retry
+    }
+
+    router.push('/agent');
+  };
+
+  const retryImages = async () => {
+    if (!createdPropertyId || failedImages.length === 0) return;
+    setIsRetrying(true);
+    setImageError('');
+    try {
+      const stillFailed = await uploadImages(createdPropertyId, failedImages);
+      setFailedImages(stillFailed);
+      if (stillFailed.length === 0) router.push('/agent');
+    } finally {
+      setIsRetrying(false);
     }
   };
 
-  const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5 MB
+  const rejectFile = (file: File): string | null => {
+    if (!ACCEPTED_TYPES.includes(file.type)) {
+      return `${file.name} is not a supported image (use JPEG, PNG, WebP or HEIC).`;
+    }
+    if (file.size > MAX_FILE_SIZE) {
+      return `${file.name} is larger than 5 MB.`;
+    }
+    return null;
+  };
 
   const validateAndSetMainImage = (file: File) => {
-    if (file.size > MAX_FILE_SIZE) {
-      setError('Main image must be under 5 MB.');
+    const problem = rejectFile(file);
+    if (problem) {
+      setError(problem);
       return;
     }
+    setError('');
     setMainImage(file);
   };
 
   const handleOtherImagesChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
-    const oversized = files.filter((f) => f.size > MAX_FILE_SIZE);
-    if (oversized.length > 0) {
-      setError(`${oversized.length} image(s) exceed the 5 MB limit and were skipped.`);
-    }
-    setOtherImages((prev) => [...prev, ...files.filter((f) => f.size <= MAX_FILE_SIZE)]);
+    const accepted: File[] = [];
+    const problems: string[] = [];
+
+    files.forEach((f) => {
+      const problem = rejectFile(f);
+      if (problem) problems.push(problem);
+      else accepted.push(f);
+    });
+
+    setError(problems.length > 0 ? `${problems.length} file(s) skipped. ${problems[0]}` : '');
+    setOtherImages((prev) => [...prev, ...accepted]);
   };
 
   const removeOtherImage = (index: number) => {
@@ -195,6 +310,21 @@ export function PostPropertyForm() {
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
           {error && (
             <div className="text-sm text-destructive bg-destructive/10 px-4 py-3 rounded-lg">{error}</div>
+          )}
+
+          {imageError && (
+            <div className="space-y-3 rounded-lg border border-amber-300 bg-amber-50 px-4 py-3 text-sm text-amber-900">
+              <p>{imageError}</p>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={retryImages}
+                disabled={isRetrying}
+              >
+                {isRetrying ? 'Retrying…' : `Retry ${failedImages.length} photo(s)`}
+              </Button>
+            </div>
           )}
 
           <FormField control={form.control} name="title" render={({ field }) => (
@@ -370,7 +500,9 @@ export function PostPropertyForm() {
           </div>
 
           <Button type="submit" className="w-full" size="lg" disabled={form.formState.isSubmitting || !form.watch('termsAccepted')}>
-            {form.formState.isSubmitting ? 'Submitting...' : 'Submit for Review'}
+            {form.formState.isSubmitting
+              ? uploadProgress || 'Submitting...'
+              : 'Submit for Review'}
           </Button>
         </form>
       </Form>
